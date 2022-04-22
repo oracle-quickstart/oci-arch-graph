@@ -1,0 +1,24 @@
+### Required Authentication Variables
+user_ocid        = "ocid1.user.oc1..aa..."
+fingerprint      = "eb:16:93:..."
+tenancy_ocid     = "ocid1.tenancy.oc1..aa..."
+region           = "us-ashburn-1"
+private_key_path = "/path_to/oci_api_key.pem"
+compartment_id = "ocid1.compartment.oc1..aaa..."
+
+### Database Variables
+service_name = "ogcs"
+adb_type                     = "Paid Autonomous Database"
+# See adb_type_enum variable for valid values
+adb_compartment_ocid         = "ocid1.compartment.oc1..aaa..."
+adb_level                    = "low"
+# valid values are low, medium or high
+adb_user                     = "graphuser"
+adb_user_password_ocid       = "ocid1.vaultsecret.oc1.iad.amaaa..."
+adb_name                     = "gsrademo"
+adb_version                  = "19c"
+adb_license_model            = "LICENSE_INCLUDED"
+# valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE
+adb_cpu_core_count           = 1
+adb_data_storage_size_in_tbs = 1 
+adb_enable_auto_scale        = true
