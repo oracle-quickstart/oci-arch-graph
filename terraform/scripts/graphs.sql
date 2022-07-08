@@ -1,3 +1,3 @@
-@./scripts/admin.sql
+@./scripts/adminandrest.sql
 /
-@./scripts/rest.sql
+
