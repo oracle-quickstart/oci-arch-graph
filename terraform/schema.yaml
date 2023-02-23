@@ -49,7 +49,6 @@ variableGroups:
       - tenancy_ocid
       - region
       - compartment_ocid
-      - admin_pwd
       - adb_type_enum
       - adb_license_model_enum
       - adb_workload_enum
