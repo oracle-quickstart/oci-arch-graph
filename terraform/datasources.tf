@@ -14,7 +14,7 @@ resource "random_string" "autonomous_database_admin_password" {
   min_upper        = 3
   min_lower        = 3
   min_numeric      = 3
-  min_special      = 1
+  min_special      = 2
   override_special = "#"
 }
 
@@ -24,6 +24,6 @@ resource "random_string" "graphuser_password" {
   min_upper        = 3
   min_lower        = 3
   min_numeric      = 3
-  min_special      = 1
+  min_special      = 2
   override_special = "#"
 }

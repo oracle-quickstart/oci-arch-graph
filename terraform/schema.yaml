@@ -238,13 +238,8 @@ outputs:
     visible: true
 
   graph_password:
-    type: copyableString
-    title: Graph Password
-    sensitive: false
-
-  notes:
     type: string
-    title: Notes
-    visible: true
+    title: Graph Password
+    sensitive: true
 
 primaryOutputButton: dashboard_url
