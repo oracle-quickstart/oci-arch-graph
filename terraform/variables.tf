@@ -85,15 +85,63 @@ variable "access_type_enum" {
     }
 }
 
-variable "network_compartment_id" { }
-
-variable "existing_vcn_id" { }
-
-variable "subnet_id" { }
-
-variable "add_nsg" {
-  default = true
+variable "network_compartment_id" { 
+  default = ""
 }
+
+variable "existing_vcn_id" { 
+  default = ""
+}
+
+variable "subnet_id" { 
+  default = ""
+}
+
+variable "nsg_strategy" {
+  default = "Create a new NSG"
+}
+
+variable "nsg_strategy_enum" {
+  type = map 
+  default = {
+    USE_NEW = "Create a new NSG"
+    EXISTING = "Use an existing NSG"
+  }
+}
+
+variable "nsg_label" {
+  default = "allow graphs bastion"
+}
+
+variable "use_existing_nsg" {
+  default = ""
+}
+
+variable "vcn_strategy_enum" {
+  type = map
+  default = {
+    CREATE_VCN = "Create New VCN"
+    USE_VCN    = "Use Existing VCN"
+  }
+}
+
+variable "vcn_strategy" {
+  default = "Create New VCN"
+}
+
+variable "vcn_name" {
+  default = ""
+}
+
+variable "vcn_cidr" {
+  default = ""
+}
+
+variable "subnet_cidr" {
+  default = ""
+}
+
+
 
 /*
 ********************

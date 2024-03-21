@@ -47,8 +47,8 @@ resource "oci_database_autonomous_database" "private_database" {
   license_model            = local.adb_license_model
   is_free_tier             = local.is_free_adb
   is_auto_scaling_enabled  = local.adb_enable_auto_scale
-  subnet_id                = var.subnet_id
-  nsg_ids                  = [oci_core_network_security_group.simple_nsg.0.id]
+  subnet_id                = local.create_network ? oci_core_subnet.simple_subnet.0.id : var.subnet_id
+  nsg_ids                  = local.create_nsg ? [oci_core_network_security_group.simple_nsg.0.id] : [var.use_existing_nsg]
 
   freeform_tags = var.defined_tag.freeformTags
 }
