@@ -36,7 +36,37 @@ variableGroups:
       - adb_enable_auto_scale
       - adb_license_model
       - adb_name
-      - adb_version
+      - adb_version_adw
+      - adb_version_atp
+
+  - title: "Network configuration"
+    visible:
+      eq:
+        - adb_type
+        - "Paid Oracle Autonomous Database"
+    variables:
+      - access_type
+      - network_compartment_id
+      - vcn_strategy
+      - existing_vcn_id
+      - vcn_name
+      - vcn_cidr
+      - subnet_cidr
+      - subnet_id
+      - nsg_strategy
+      - nsg_label
+      - use_existing_nsg
+
+  - title: "Bastion configuration"
+    visible:
+      eq:
+        - access_type
+        - "Private endpoint access only"
+    variables:
+      - bastion_name
+      - cidr_allowlist
+      - max_ttl
+      - ssh_public_key
 
   - title: "Tags"
     variables:
@@ -56,6 +86,9 @@ variableGroups:
       - user_id
       - fingerprint
       - private_key_path
+      - access_type_enum
+      - nsg_strategy_enum
+      - vcn_strategy_enum
 
 variables:
 
@@ -70,11 +103,11 @@ variables:
   adb_workload:
     type: enum
     required: true
-    enum:
-      - "Autonomous Transaction Processing"
-      - "Autonomous Data Warehouse"
+    enum: 
+      - "Data Warehouse (Serverless Infrastructure)"
+      - "Transaction Processing (Serverless Infrastructure)"
+    default: "Data Warehouse (Serverless Infrastructure)"
     title: Autonomous Database Workload
-    default: "Autonomous Transaction Processing"
 
   adb_type:
     type: enum
@@ -91,11 +124,11 @@ variables:
         - adb_type
         - "Paid Oracle Autonomous Database"
     type: integer
-    minimum: 1
-    maximum: 128
+    minimum: 2
+    maximum: 512
     multipleOf: 1
-    title: The number of OCPU cores to be made available to the database
-    description: The number of OCPU cores to enable. Available cores are subject to your tenancy's service limits
+    title: The number of ECPU cores to be made available to the database
+    description: The number of ECPU cores to enable. Available cores are subject to your tenancy's service limits
     required: true
 
   adb_data_storage_size_in_tbs:
@@ -105,7 +138,7 @@ variables:
         - "Paid Oracle Autonomous Database"
     type: number
     minimum: 1
-    maximum: 128
+    maximum: 384
     multipleOf: 1
     title: The quantity of data in the database, in terabytes
     description: The amount of storage to allocate
@@ -146,18 +179,236 @@ variables:
     pattern: "^[a-zA-Z][a-zA-Z0-9]+$"
     required: true
 
-  adb_version:
+  adb_version_adw:
+    visible: 
+      eq:
+        - adb_workload
+        - "Data Warehouse (Serverless Infrastructure)"
     type: oci:database:autonomousdatabaseversion:id
     title: "Database version"
-    description: "The available Autonomous Database versions"
+    description: "The available Autonomous Data Warehouse versions"
     required: true
-    enum: 
-      - "19c"
-      - "21c"
     default: "19c"
     dependsOn:
-      compartmentId: ${adb_compartment_ocid}
+      compartmentId: adb_compartment_ocid
+      dbWorkload: "DW"
+
+  adb_version_atp:
+    visible: 
+      eq:
+        - adb_workload
+        - "Transaction Processing (Serverless Infrastructure)"
+    type: oci:database:autonomousdatabaseversion:id
+    title: "Database version"
+    description: "The available Autonomous Transaction Processing versions"
+    required: true
+    default: "19c"
+    dependsOn:
+      compartmentId: adb_compartment_ocid
       dbWorkload: "OLTP"
+
+  # Network Configuration
+  access_type:
+    type: enum
+    title: "Database access type"
+    description: "Choose network access"
+    enum:
+      - "Private endpoint access only"
+      - "Secure access from everywhere"
+    default: "Private endpoint access only"
+    required: true
+
+  network_compartment_id:
+    visible:
+      eq:
+        - access_type
+        - "Private endpoint access only"
+    type: oci:identity:compartment:id
+    title: Network Compartment
+    description: The compartment to select the existing <a target="_blank" href="https://docs.cloud.oracle.com/iaas/Content/Network/Concepts/overview.htm">network</a>.
+    required: true
+    default: compartment_ocid
+
+  vcn_strategy:
+    visible:
+      eq:
+        - access_type
+        - "Private endpoint access only"
+    type: enum
+    title: Virtual Cloud Network Strategy
+    description: Create or use existing VCN
+    enum:
+      - "Create New VCN"
+      - "Use Existing VCN"
+    required: true
+    default: "Create New VCN"
+
+  vcn_name:
+    visible:
+      and:
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+        - eq:
+          - vcn_strategy
+          - "Create New VCN"
+    type: string
+    default: "graphsvcn"
+    minLength: 1
+    maxLength: 255
+    pattern: "^[a-zA-Z_]\\w{0,254}$"
+    required: true
+    title: Database Network Name
+    description: The name for the new Virtual Cloud Network (VCN) to create for this service.
+
+  vcn_cidr:
+    visible:
+      and:
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+        - eq:
+          - vcn_strategy
+          - "Create New VCN"
+    type: string
+    default: 10.0.0.0/16
+    required: true
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: Database Network CIDR
+    description: "The CIDR to assign to the new Virtual Cloud Network (VCN) for this service. The new VCN's CIDR should not overlap with any other existing VCN CIDR. Example: 10.0.0.0/16"
+
+  subnet_cidr:
+    visible:
+      and:
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+        - eq:
+          - vcn_strategy
+          - "Create New VCN"
+    type: string
+    default: 10.0.1.0/24
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    required: true
+    title: Private Subnet CIDR
+    description: "The CIDR of the new Private Regional subnet for the database instance. The new subnet's CIDR should not overlap with any other subnet CIDRs. Example: 10.0.1.0/24"
+
+  existing_vcn_id:
+    visible:
+      and:
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+        - eq:
+          - vcn_strategy
+          - "Use Existing VCN"
+    type: oci:core:vcn:id
+    dependsOn:
+      compartmentId: network_compartment_id
+    required: true
+    default: ''
+    title: Existing Network
+    description: An existing Virtual Cloud Network (VCN).
+
+  subnet_id:
+    visible:
+      and:
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+        - eq:
+          - vcn_strategy
+          - "Use Existing VCN"
+    type: oci:core:subnet:id
+    dependsOn:
+      vcnId: existing_vcn_id
+      compartmentId: network_compartment_id
+      hidePublicSubnet: true
+    default: ''
+    required: true
+    title: Existing Private Subnet
+    description: "Select an existing subnet to use for the database."
+
+  nsg_strategy:
+    visible:
+      eq:
+        - access_type
+        - "Private endpoint access only"
+    type: enum
+    enum:
+      - "Create a new NSG"
+      - "Use an existing NSG"
+    default: "Create a new NSG"
+    required: true
+    title: Attach Network Security Group
+    description: Attach a Network Security Group to the database to allow Bastion access.
+
+  nsg_label:
+    visible:
+      and:
+        - eq:
+          - nsg_strategy
+          - "Create a new NSG"
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+    title: Network Security Group name
+    description: A descriptive name to help you keep track of your network security groups.
+    minLength: 1
+    maxLength: 30
+    pattern: "^[a-zA-Z][a-zA-Z0-9]+"
+    required: true
+
+  use_existing_nsg:
+    type: oci:core:nsg:id
+    visible:
+      and:
+        - eq:
+          - nsg_strategy
+          - "Use an existing NSG"
+        - eq:
+          - access_type
+          - "Private endpoint access only"
+    title: Network Security Group
+    required: true
+    description: Select an existing network security group to attach to the database, make sure the corresponding rule exists to allow Bastion Service access.
+    dependsOn:
+      compartmentId: network_compartment_id
+
+  # Bastion
+  bastion_name:
+    type: string
+    title: Bastion name
+    default: graphDBBastion
+    required: true
+
+  cidr_allowlist:
+    type: array
+    items:
+      type: string
+    title: CIDR block allowlist
+    description: "Example: 11.0.0.0/24 The IP address range that you want to allow to connect to target resources through SSH connections created through sessions hosted by this bastion."
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    default: [0.0.0.0/0]
+    required: true
+    
+  max_ttl:
+    type: integer
+    title: Maximum session time-to-live (TTL) minutes
+    description: The maximum session time-to-live sets an upper limit for the length of time any session created on this bastion can be used to connect to a target host.
+    default: 180
+    minimum: 30
+    maximum: 180
+    multipleOf: 1
+    required: true
+
+  ssh_public_key:
+    type: oci:core:ssh:publickey
+    title: SSH Public Key
+    description: Bastion sessions use an <a target="_blank" href="https://docs.cloud.oracle.com/iaas/Content/Compute/Tasks/managingkeypairs.htm">SSH key pair</a> instead of a password to authenticate remote users. Generate a key pair and upload your own public key now. When you <a target="_blank" href="https://docs.oracle.com/en-us/iaas/Content/Bastion/Tasks/create-session-managed-ssh.htm">connect to the Bastion</a>, you will provide the associated private key.
+    required: true
+    pattern: "((^(ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)(,((ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)*$"
+
 
   # Tagging variables
   show_tag_options:
@@ -200,21 +451,28 @@ variables:
     type: string
 
 outputGroups:
+  - title: Notes
+    outputs:
+      - notes
   - title: Database details
     outputs:
       - adb_id
       - adb_name
       - adb_admin_password
+      - dashboard_url
   - title: Graph details
     outputs: 
       - graph_username
       - graph_password
+  - title: Connection details
+    outputs:
+      - connect
+      - private_endpoint
 
 outputs:
   dashboard_url:
     type: link
-    title: Open Graph Studio
-    visible: false
+    title: Graph Studio URL
 
   adb_id:
     type: ocid
@@ -231,20 +489,31 @@ outputs:
     title: Database admin password
     displayText: Autonomous Database admin password
     sensitive: true
+    visible: true
 
   graph_username:
-    type: string
+    type: copyableString
     title: Graph Username
     visible: true
 
   graph_password:
     type: copyableString
     title: Graph Password
-    sensitive: false
+    sensitive: true
 
   notes:
     type: string
     title: Notes
     visible: true
+  
+  connect:
+    type: string
+    title: SSH command
+    visible: true
 
-primaryOutputButton: dashboard_url
+  private_endpoint:
+    type: copyableString
+    title: Private Endpoint
+    visible: true
+
+#primaryOutputButton: dashboard_url

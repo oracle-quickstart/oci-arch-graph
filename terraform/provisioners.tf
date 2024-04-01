@@ -1,5 +1,6 @@
 
 resource "null_resource" "sqlcl-create-usr" {
+  count = local.is_private ? 0 : 1
 
         provisioner "local-exec" {
              command = <<-EOT

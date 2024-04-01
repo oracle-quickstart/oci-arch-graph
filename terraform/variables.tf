@@ -23,8 +23,8 @@ variable "adb_type_enum" {
 variable "adb_workload_enum" {
   type = map
   default = {
-    DW   = "Autonomous Data Warehouse"
-    OLTP = "Autonomous Transaction Processing"
+    DW   = "Data Warehouse (Serverless Infrastructure)"
+    OLTP = "Transaction Processing (Serverless Infrastructure)"
   }
 }
 
@@ -46,15 +46,17 @@ variable "adb_compartment_ocid" {
 variable "adb_name" {
   default = "gsrademo"
 }
-
-variable "adb_version" {
+variable "adb_version_adw" {
+  default = "19c"
+}
+variable "adb_version_atp" {
   default = "19c"
 }
 variable "adb_license_model" {
   default = "License Included" # LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE
 }
 variable "adb_cpu_core_count" {
-  default = 1
+  default = 2
 }
 variable "adb_data_storage_size_in_tbs" {
   default = 1
@@ -68,12 +70,110 @@ variable "adb_workload" {
 
 /*
 ********************
+* Network
+********************
+*/
+variable "access_type" {
+  default = "Private endpoint access only"
+}
+
+variable "access_type_enum" {
+    type = map
+    default = {
+        PRIVATE = "Private endpoint access only"
+        PUBLIC = "Secure access from everywhere"
+    }
+}
+
+variable "network_compartment_id" { 
+  default = ""
+}
+
+variable "existing_vcn_id" { 
+  default = ""
+}
+
+variable "subnet_id" { 
+  default = ""
+}
+
+variable "nsg_strategy" {
+  default = "Create a new NSG"
+}
+
+variable "nsg_strategy_enum" {
+  type = map 
+  default = {
+    USE_NEW = "Create a new NSG"
+    EXISTING = "Use an existing NSG"
+  }
+}
+
+variable "nsg_label" {
+  default = "allow graphs bastion"
+}
+
+variable "use_existing_nsg" {
+  default = ""
+}
+
+variable "vcn_strategy_enum" {
+  type = map
+  default = {
+    CREATE_VCN = "Create New VCN"
+    USE_VCN    = "Use Existing VCN"
+  }
+}
+
+variable "vcn_strategy" {
+  default = "Create New VCN"
+}
+
+variable "vcn_name" {
+  default = ""
+}
+
+variable "vcn_cidr" {
+  default = ""
+}
+
+variable "subnet_cidr" {
+  default = ""
+}
+
+
+
+/*
+********************
+* Bastion
+********************
+*/
+variable "bastion_name" {
+  default = "graphDBBastion"
+}
+
+variable "cidr_allowlist" {
+  type = list(string)
+  default = ["0.0.0.0/0"]
+}
+
+variable "max_ttl" {
+  default = 180
+}
+
+// Note: This is the opc user's SSH public key text and not the key file path.
+variable "ssh_public_key" { 
+  default = ""
+ }
+
+/*
+********************
 * Tag Config
 ********************
 */
 
 variable "show_tag_options" {
-  default = true
+  default = false
 }
 
 variable  "defined_tag" {

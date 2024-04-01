@@ -9,9 +9,8 @@ This architecture uses Oracle Autonomous Data Warehouse and creates a database u
 The repository contains the Terraform code to create a Resource Manager stack, that creates all the required resources and configures the created resources to add a graph user and the required `BANK_ACCOUNTS` and `BANK_TXNS` tables.
 
 ### Prerequisites 
--   Permission to  **`manage`**  the following types of resources in your Oracle Cloud Infrastructure tenancy:  **`autonomous-database-family`**  and  **`orm-family`**.
+-   Permission to  **`manage`**  the following types of resources in your Oracle Cloud Infrastructure tenancy:  **`autonomous-database-family`**, **`orm-family`**, **`virtual-network-family`**, **`network-security-groups`**, **`bastion`**, **`bastion-session`** and **`instance-family`**,.
 -   Permission to  **`use`**  the following types of resources in your Oracle Cloud Infrastructure tenancy: **`tag-namespaces`**.
-- -   Permission to  **`use`**  the following types of resources in your Oracle Cloud Infrastructure tenancy: **`tag-namespaces`**.
 -   Quota to create one Autonomous Database on Shared Infrastructure instance with at least  **1 OCPU and 1 Tb storage**.
 
 ### Components

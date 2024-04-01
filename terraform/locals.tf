@@ -11,6 +11,12 @@ locals {
   adb_enable_auto_scale        = local.is_free_adb ? false : var.adb_enable_auto_scale
   adb_license_model            = local.is_free_adb ? "LICENSE_INCLUDED" : local.adb_license
 
+  adb_version = local.adb_workload == "DW" ? var.adb_version_adw : var.adb_version_atp
 
+  is_private = (local.is_free_adb==false) && (var.access_type == var.access_type_enum["PRIVATE"]) ? true : false
+
+  create_nsg = var.nsg_strategy == var.nsg_strategy_enum["USE_NEW"] ? true : false
+
+  create_network = var.vcn_strategy == var.vcn_strategy_enum["CREATE_VCN"] ? true : false
 
 }
