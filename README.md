@@ -74,6 +74,13 @@ The repository contains the Terraform code to create a Resource Manager stack, t
     |Apply                       | `terraform apply` is used to apply the changes required to reach the desired state of the configuration described by the template.|
     |Destroy                     | `terraform destroy` is used to destroy the Terraform-managed infrastructure.|
 
+## Contributing
+
+This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)
+
+## Security
+
+Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
 
 [oci-prereqs]: https://github.com/oracle/oci-quickstart-prerequisites
 [magic_button]: https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg
